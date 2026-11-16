@@ -377,19 +377,33 @@
     }
 
     async function loadDoctorsList() {
-      try {
-        const docRes = await fetch(API + '/api/doctors');
-        const doctorsData = await docRes.json();
-        const docSelect = document.querySelector('#walkin-doctor');
-        let doctorKeys = Array.isArray(doctorsData) ? doctorsData : (doctorsData ? Object.keys(doctorsData) : []);
-
-        if (doctorKeys.length > 0) {
-          docSelect.innerHTML = '<option value="">Select Doctor</option>' + doctorKeys.map(doc => `<option value="${doc}">${doc}</option>`).join('');
-        }
-      } catch (err) {
-        console.error('Error loading doctors list:', err);
-      }
+  try {
+    const docRes = await fetch(API + '/api/doctors');
+    const doctorsData = await docRes.json();
+    const docSelect = document.querySelector('#walkin-doctor');
+    
+    let doctorsArray = [];
+    if (Array.isArray(doctorsData)) {
+      doctorsArray = doctorsData;
+    } else if (doctorsData && typeof doctorsData === 'object') {
+      // Agar backend ne object ya key-value return kiya ho
+      doctorsArray = doctorsData.doctors || Object.values(doctorsData) || Object.keys(doctorsData);
     }
+
+    if (doctorsArray.length > 0) {
+      docSelect.innerHTML = '<option value="">Select Doctor</option>' + 
+        doctorsArray.map(doc => {
+          // Handle agar doc object ho ya string naam ho
+          const docName = typeof doc === 'object' ? (doc.name || doc.doctor_name) : doc;
+          return `<option value="${docName}">${docName}</option>`;
+        }).join('');
+    } else {
+      docSelect.innerHTML = '<option value="">No doctors available</option>';
+    }
+  } catch (err) {
+    console.error('Error loading doctors list:', err);
+  }
+}
 
     async function loadReceptionistData() {
       loadAppointmentsByDate();
