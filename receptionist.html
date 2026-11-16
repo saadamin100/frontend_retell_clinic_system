@@ -310,24 +310,10 @@
     </section>
   </main>
 
-  <audio id="chime-audio" src="/static/chime.mp3" preload="auto"></audio>
-  <audio id="opd-end-audio" src="/static/chime1.mp3" preload="auto"></audio>
-
   <script>
     const API = 'https://clinic-ai-agent-28ug.onrender.com';
     let branch = 'Main';
-    let lastTokenServed = null;
-    let wasOpdActive = false;
     let allFetchedAppointments = [];
-
-    function playSound(type = 'normal') {
-      const audioId = type === 'opd_end' ? 'opd-end-audio' : 'chime-audio';
-      const audio = document.getElementById(audioId);
-      if (audio) {
-        audio.currentTime = 0;
-        audio.play().catch(err => console.log("Audio play blocked:", err));
-      }
-    }
 
     function initDateDropdowns() {
       const daySelect = document.getElementById('filter-day');
@@ -492,24 +478,11 @@
         const res = await fetch(`${API}/api/display/queue?branch=${encodeURIComponent(branch)}`);
         const q = await res.json();
         
-        const isCurrentOpdActive = q.is_opd_active || false;
-
-        if (wasOpdActive && !isCurrentOpdActive) {
-          playSound('opd_end');
-        }
-        wasOpdActive = isCurrentOpdActive;
-
         const servingBox = document.getElementById('current-serving-text');
         if (q.now_serving) {
           servingBox.innerHTML = `Now Serving: <strong style="font-size: 1.3rem; color: #166534;">#${q.now_serving.token_id} - ${q.now_serving.patient_name}</strong> <span style="font-size: 0.85rem; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; margin-left: 10px;">${q.now_serving.type || 'ONLINE'}</span>`;
-          
-          if (lastTokenServed !== null && lastTokenServed !== q.now_serving.token_id) {
-            playSound('normal');
-          }
-          lastTokenServed = q.now_serving.token_id;
         } else {
           servingBox.textContent = 'No active consultation right now';
-          lastTokenServed = null;
         }
       } catch (err) {
         console.error('Error fetching active queue status:', err);
