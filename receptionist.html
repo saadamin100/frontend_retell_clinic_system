@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Receptionist Dashboard | Clinical Suite</title>
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f766e, #115e59);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .header-controls label {
+      font-size: 0.75rem;
+      display: block;
+      margin-bottom: 2px;
+      color: #ccfbf1;
+    }
+
+    .header-controls select {
+      padding: 8px 12px;
+      background: white;
+      color: var(--text-main);
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .opd-active-banner { 
+      background: #fee2e2; 
+      border: 2px solid #ef4444; 
+      color: #991b1b; 
+      padding: 16px; 
+      border-radius: 10px; 
+      text-align: center; 
+      font-weight: 700; 
+      margin-bottom: 24px; 
+      font-size: 1.15rem; 
+      animation: pulse 2s infinite;
+      box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2);
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .now-serving-banner {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 2px solid #22c55e;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      outline: none;
+    }
+
+    .action-btn {
+      background-color: #0f766e;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .action-btn:hover {
+      background-color: #115e59;
+    }
+
+    .action-btn:disabled {
+      background-color: #94a3b8;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+
+    table.queue {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    table.queue th, table.queue td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    table.queue th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .debug-box {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      margin-bottom: 15px;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Receptionist Dashboard</h1>
+      <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 2px;">Online appointments, walk-ins & check-in portal</div>
+    </div>
+    <div class="header-controls">
+      <div>
+        <label for="branch">Branch:</label>
+        <select id="branch"></select>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="opd-alert-container"></div>
+
+    <div class="now-serving-banner" id="current-serving-box">
+      <div style="font-size: 1.1rem; color: #166534; font-weight: 600;" id="current-serving-text">No active consultation right now</div>
+    </div>
+
+    <!-- Register Walk-in Patient Section -->
+    <section class="card" id="walkin-card">
+      <h2 style="margin-top: 0; color: var(--primary); font-size: 1.15rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Register Walk-in Patient</h2>
+      <form id="walkin-form" onsubmit="submitWalkin(event)">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="walkin-name">Patient Name *</label>
+            <input type="text" id="walkin-name" placeholder="Enter full name" required>
+          </div>
+          <div class="form-group">
+            <label for="walkin-phone">Phone Number</label>
+            <input type="text" id="walkin-phone" placeholder="03XXXXXXXXX">
+          </div>
+          <div class="form-group">
+            <label for="walkin-doctor">Assign Doctor *</label>
+            <select id="walkin-doctor" required>
+              <option value="">Select Doctor</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" id="walkin-submit-btn" class="action-btn">Add Walk-in to Queue</button>
+      </form>
+    </section>
+
+    <!-- Appointments Log & History Section -->
+    <section class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+        <h2 style="margin: 0; color: var(--primary); font-size: 1.15rem;">Appointments & History</h2>
+      </div>
+
+      <!-- Date Filters & Search Bar -->
+      <div class="filter-bar">
+        <div class="form-group" style="margin:0; flex: 1; min-width: 140px;">
+          <label>Day</label>
+          <select id="filter-day" onchange="loadAppointmentsByDate()">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+        <div class="form-group" style="margin:0; flex: 1; min-width: 140px;">
+          <label>Month</label>
+          <select id="filter-month" onchange="loadAppointmentsByDate()">
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0; flex: 1; min-width: 120px;">
+          <label>Year</label>
+          <select id="filter-year" onchange="loadAppointmentsByDate()">
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2027">2027</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0; flex: 2; min-width: 220px;">
+          <label>Search Patient / Phone</label>
+          <input type="text" id="search-query" placeholder="Type name or phone..." oninput="filterTableData()">
+        </div>
+        <button class="action-btn" style="height: 42px;" onclick="setTodayFilter()">Today</button>
+      </div>
+
+      <div class="debug-box" id="debug-info">Syncing appointments...</div>
+      
+      <div style="overflow-x: auto;">
+        <table class="queue">
+          <thead>
+            <tr>
+              <th>Appt ID</th>
+              <th>Patient Name</th>
+              <th>Phone</th>
+              <th>Doctor</th>
+              <th>Date</th>
+              <th>Mode</th>
+              <th>Status / Action</th>
+            </tr>
+          </thead>
+          <tbody id="online-list">
+            <tr><td colspan="7" style="text-align: center; color: #666; padding: 20px;">Loading appointments...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <audio id="chime-audio" src="/static/chime.mp3" preload="auto"></audio>
+  <audio id="opd-end-audio" src="/static/chime1.mp3" preload="auto"></audio>
+
+  <script>
+    const API = location.protocol === 'file:' ? 'https://clinic-ai-agent-28ug.onrender.com/' : location.origin;
+    let branch = 'Main';
+    let lastTokenServed = null;
+    let wasOpdActive = false;
+    let allFetchedAppointments = [];
+
+    function playSound(type = 'normal') {
+      const audioId = type === 'opd_end' ? 'opd-end-audio' : 'chime-audio';
+      const audio = document.getElementById(audioId);
+      if (audio) {
+        audio.currentTime = 0;
+        audio.play().catch(err => console.log("Audio play blocked:", err));
+      }
+    }
+
+    function initDateDropdowns() {
+      const daySelect = document.getElementById('filter-day');
+      let daysHtml = '';
+      for (let i = 1; i <= 31; i++) {
+        daysHtml += `<option value="${i}">${i}</option>`;
+      }
+      daySelect.innerHTML = daysHtml;
+
+      const now = new Date();
+      daySelect.value = now.getDate();
+      document.getElementById('filter-month').value = now.getMonth() + 1;
+      document.getElementById('filter-year').value = now.getFullYear();
+    }
+
+    function setTodayFilter() {
+      const now = new Date();
+      document.getElementById('filter-day').value = now.getDate();
+      document.getElementById('filter-month').value = now.getMonth() + 1;
+      document.getElementById('filter-year').value = now.getFullYear();
+      loadAppointmentsByDate();
+    }
+
+    async function init() {
+      try {
+        initDateDropdowns();
+        const branchRes = await fetch(API + '/api/branches');
+        const branchData = await branchRes.json();
+        
+        let branchesList = ['Main'];
+        if (branchData) {
+          if (Array.isArray(branchData.branches)) branchesList = branchData.branches;
+          else if (Array.isArray(branchData)) branchesList = branchData;
+        }
+        branch = branchData.default_branch || branchesList[0] || 'Main';
+        
+        const branchSelect = document.querySelector('#branch');
+        branchSelect.innerHTML = branchesList.map(b => `<option value="${b}">${b}</option>`).join('');
+        branchSelect.value = branch;
+        branchSelect.onchange = (e) => { branch = e.target.value; loadReceptionistData(); };
+
+        loadDoctorsList();
+        loadReceptionistData();
+      } catch (err) {
+        console.error('Init error:', err);
+      }
+    }
+
+    async function loadDoctorsList() {
+      try {
+        const docRes = await fetch(API + '/api/doctors');
+        const doctorsData = await docRes.json();
+        const docSelect = document.querySelector('#walkin-doctor');
+        let doctorKeys = Array.isArray(doctorsData) ? doctorsData : (doctorsData ? Object.keys(doctorsData) : []);
+
+        if (doctorKeys.length > 0) {
+          docSelect.innerHTML = '<option value="">Select Doctor</option>' + doctorKeys.map(doc => `<option value="${doc}">${doc}</option>`).join('');
+        }
+      } catch (err) {
+        console.error('Error loading doctors list:', err);
+      }
+    }
+
+    async function loadReceptionistData() {
+      loadAppointmentsByDate();
+      loadActiveQueueStatus();
+    }
+
+    async function loadAppointmentsByDate() {
+      const debugBox = document.getElementById('debug-info');
+      const d = document.getElementById('filter-day').value;
+      const m = document.getElementById('filter-month').value;
+      const y = document.getElementById('filter-year').value;
+
+      const formattedMonth = String(m).padStart(2, '0');
+      const formattedDay = String(d).padStart(2, '0');
+      const selectedDateStr = `${y}-${formattedMonth}-${formattedDay}`;
+
+      try {
+        const res = await fetch(`${API}/api/appointments/today?branch=${encodeURIComponent(branch)}&date=${encodeURIComponent(selectedDateStr)}`);
+        if (!res.ok) {
+          // Fallback if backend doesn't support ?date query param, fetch all and filter client-side
+          const fallbackRes = await fetch(`${API}/api/appointments/today?branch=${encodeURIComponent(branch)}`);
+          allFetchedAppointments = await fallbackRes.json();
+          allFetchedAppointments = allFetchedAppointments.filter(item => (item.appt_date || '').startsWith(selectedDateStr));
+        } else {
+          allFetchedAppointments = await res.json();
+        }
+
+        const qRes = await fetch(`${API}/api/display/queue?branch=${encodeURIComponent(branch)}`);
+        const qData = await qRes.json();
+        const isOpdRunning = qData.is_opd_active || false;
+
+        const alertContainer = document.getElementById('opd-alert-container');
+        const walkinSubmitBtn = document.getElementById('walkin-submit-btn');
+
+        if (isOpdRunning) {
+          alertContainer.innerHTML = `<div class="opd-active-banner">🚨 SPECIAL OPD IS ACTIVE — Check-ins and walk-ins are currently disabled for receptionist!</div>`;
+          walkinSubmitBtn.disabled = true;
+          walkinSubmitBtn.title = "Walk-ins disabled during Special OPD";
+        } else {
+          alertContainer.innerHTML = '';
+          walkinSubmitBtn.disabled = false;
+          walkinSubmitBtn.title = "";
+        }
+
+        filterTableData();
+        debugBox.textContent = `Loaded appointments for ${selectedDateStr} at ${new Date().toLocaleTimeString()}`;
+      } catch (err) {
+        console.error('Error loading appointments:', err);
+      }
+    }
+
+    function filterTableData() {
+      const query = document.getElementById('search-query').value.toLowerCase().trim();
+      const onlineListEl = document.getElementById('online-list');
+
+      const filtered = allFetchedAppointments.filter(app => {
+        const name = (app.patient_name || '').toLowerCase();
+        const phone = (app.phone || '').toLowerCase();
+        return name.includes(query) || phone.includes(query);
+      });
+
+      if (filtered.length > 0) {
+        onlineListEl.innerHTML = filtered.map(app => `
+          <tr>
+            <td><strong>#${app.appointment_id || app.id}</strong></td>
+            <td>${app.patient_name}</td>
+            <td>${app.phone || 'N/A'}</td>
+            <td>${app.doctor_name || 'N/A'}</td>
+            <td>${app.appt_date || 'N/A'}</td>
+            <td><span style="padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: ${app.type === 'WALK_IN' ? '#fef3c7; color: #d97706;' : '#e0f2fe; color: #0369a1;'};">${app.type || 'ONLINE'}</span></td>
+            <td>
+              ${app.status !== 'Checked In' && app.status !== 'Completed' ? 
+                `<button class="action-btn" style="padding: 6px 14px; font-size: 0.85rem;" onclick="checkinAppointment(${app.appointment_id || app.id})">Check In</button>` : 
+                `<span style="color: #16a34a; font-weight: 600;">${app.status}</span>`
+              }
+            </td>
+          </tr>
+        `).join('');
+      } else {
+        onlineListEl.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #666; padding: 25px;">No appointments found matching your search</td></tr>';
+      }
+    }
+
+    async function loadActiveQueueStatus() {
+      try {
+        const res = await fetch(`${API}/api/display/queue?branch=${encodeURIComponent(branch)}`);
+        const q = await res.json();
+        
+        const isCurrentOpdActive = q.is_opd_active || false;
+
+        if (wasOpdActive && !isCurrentOpdActive) {
+          playSound('opd_end');
+        }
+        wasOpdActive = isCurrentOpdActive;
+
+        const servingBox = document.getElementById('current-serving-text');
+        if (q.now_serving) {
+          servingBox.innerHTML = `Now Serving: <strong style="font-size: 1.3rem; color: #166534;">#${q.now_serving.token_id} - ${q.now_serving.patient_name}</strong> <span style="font-size: 0.85rem; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px; margin-left: 10px;">${q.now_serving.type || 'ONLINE'}</span>`;
+          
+          if (lastTokenServed !== null && lastTokenServed !== q.now_serving.token_id) {
+            playSound('normal');
+          }
+          lastTokenServed = q.now_serving.token_id;
+        } else {
+          servingBox.textContent = 'No active consultation right now';
+          lastTokenServed = null;
+        }
+      } catch (err) {
+        console.error('Error fetching active queue status:', err);
+      }
+    }
+
+    async function checkinAppointment(id) {
+      try {
+        const res = await fetch(`${API}/api/appointments/checkin/${id}`, { method: 'POST' });
+        if (res.ok) {
+          loadReceptionistData();
+        } else {
+          alert('Could not check in appointment.');
+        }
+      } catch (err) {
+        console.error('Check-in error:', err);
+      }
+    }
+
+    async function submitWalkin(event) {
+      event.preventDefault();
+      const patient_name = document.getElementById('walkin-name').value.trim();
+      const phone = document.getElementById('walkin-phone').value.trim();
+      const doctor_name = document.getElementById('walkin-doctor').value;
+
+      if (!patient_name || !doctor_name) {
+        alert('Please fill in required fields.');
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/api/queue/add_walkin`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            branch: branch,
+            doctor_name: doctor_name,
+            patient_name: patient_name,
+            phone: phone,
+            type: 'WALK_IN'
+          })
+        });
+
+    if (res.ok) {
+          document.getElementById('walkin-form').reset();
+          alert('Walk-in patient added successfully to queue!');
+          loadReceptionistData();
+        } else {
+          const errData = await res.json();
+          alert(errData.detail || 'Failed to add walk-in patient.');
+        }
+      } catch (err) {
+        console.error('Error adding walk-in:', err);
+        alert('Error connecting to server.');
+      }
+    }
+
+    init();
+    setInterval(loadReceptionistData, 4000);
+  </script>
+</body>
+</html>

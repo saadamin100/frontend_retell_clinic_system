@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doctor Dashboard | Clinical Suite</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-hover: #115e59;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f766e, #115e59);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .stat-box {
+      background: #f1f5f9;
+      padding: 16px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .stat-box b {
+      display: block;
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin-top: 5px;
+    }
+
+    .now-serving-card {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      border: 2px solid #22c55e;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .now-serving-card h2 {
+      color: #166534;
+      margin-bottom: 15px;
+    }
+
+    .next-btn {
+      background-color: #16a34a;
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 10px rgba(22, 163, 74, 0.3);
+    }
+
+    .next-btn:hover {
+      background-color: #15803d;
+      transform: translateY(-1px);
+    }
+
+    .opd-active-banner { 
+      background: #fee2e2; 
+      border: 2px solid #ef4444; 
+      color: #991b1b; 
+      padding: 15px; 
+      border-radius: 8px; 
+      text-align: center; 
+      font-weight: 700; 
+      margin-bottom: 20px; 
+      font-size: 1.1rem; 
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .opd-btn { 
+      background: #dc2626 !important; 
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .opd-btn.active-opd { 
+      background: #16a34a !important; 
+    }
+
+    select#branch {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      background: white;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    table.queue {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    table.queue th, table.queue td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    table.queue th {
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .debug-box {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    /* Responsive layout: preserves the desktop interface while adapting cleanly
+       to tablets and phones. */
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      min-width: 0;
+      overflow-x: hidden;
+    }
+
+    button, select, input {
+      font: inherit;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        padding: 16px;
+        gap: 14px;
+        flex-wrap: wrap;
+        align-items: stretch;
+      }
+
+      header > div:first-child {
+        min-width: 0;
+        flex: 1 1 100%;
+      }
+
+      header h1 {
+        font-size: 1.35rem;
+        margin: 0;
+      }
+
+      header > div:last-child {
+        width: 100%;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) minmax(110px, 0.7fr);
+        gap: 10px !important;
+      }
+
+      .opd-btn,
+      select#branch {
+        width: 100%;
+        min-height: 44px;
+      }
+
+      main {
+        width: 100%;
+        max-width: none;
+        margin: 18px auto;
+        padding: 0 12px;
+      }
+
+      .card {
+        padding: 16px;
+        margin-bottom: 16px;
+        border-radius: 10px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .stat-box {
+        padding: 14px 8px;
+        font-size: 0.85rem;
+      }
+
+      .stat-box b {
+        font-size: 1.45rem;
+      }
+
+      .now-serving-card {
+        padding: 20px 14px;
+      }
+
+      .next-btn {
+        width: 100%;
+        min-height: 48px;
+        padding: 12px 16px;
+        font-size: 1rem;
+      }
+
+      .opd-active-banner {
+        font-size: 0.9rem;
+        padding: 12px;
+        line-height: 1.4;
+      }
+
+      table.queue {
+        min-width: 540px;
+      }
+
+      table.queue th,
+      table.queue td {
+        padding: 10px 12px;
+        white-space: nowrap;
+      }
+
+      /* Keep the queue horizontally scrollable rather than squeezing columns. */
+      section.card > div[style*="overflow-x"] {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header > div:last-child {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 0 10px;
+        margin-top: 12px;
+      }
+
+      .stats {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .stat-box b {
+        font-size: 1.3rem;
+      }
+
+      .now-serving-card #current {
+        font-size: 1rem !important;
+        line-height: 1.45;
+      }
+
+      .now-serving-card #current strong {
+        font-size: 1.15rem !important;
+      }
+
+      section.card h2 {
+        font-size: 1.05rem !important;
+        line-height: 1.35;
+      }
+
+      .debug-box {
+        font-size: 0.75rem;
+        line-height: 1.35;
+      }
+    }
+
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>Doctor Dashboard</h1>
+      <div style="font-size: 0.9rem; opacity: 0.9; margin-top: 2px; line-height: 1.35;">Live consultation & patient queue portal</div>
+    </div>
+    <div style="display: flex; gap: 15px; align-items: center;">
+      <button id="opd-toggle-btn" class="opd-btn" onclick="toggleOPD()">Start Special OPD</button>
+      <select id="branch"></select>
+    </div>
+  </header>
+
+  <main>
+    <div id="opd-alert-container"></div>
+
+    <div class="stats card">
+      <div class="stat-box">Completed Patients <b id="count">0</b></div>
+      <div class="stat-box">Total Revenue <b id="revenue">Rs. 0</b></div>
+    </div>
+
+    <section class="card now-serving-card">
+      <div id="current" style="font-size: 1.25rem; font-weight: 500; margin-bottom: 20px;">No patient in consultation</div>
+      <button id="next-patient-btn" class="next-btn" onclick="nextPatient()" disabled>Call Next Patient ➡</button>
+      <div id="action-message" role="status" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin-top: 0; color: #0f766e; font-size: 1.2rem; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px;">Waiting Queue (Online First)</h2>
+      <div class="debug-box" id="debug-info">Syncing queue data from server...</div>
+
+      <div style="overflow-x: auto;">
+        <table class="queue">
+          <thead>
+            <tr>
+              <th>Token</th>
+              <th>Patient Name</th>
+              <th>Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="list">
+            <tr><td colspan="4" style="text-align: center; color: #666; padding: 20px;">Loading queue...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+  const API = location.protocol === 'file:' ? 'http://127.0.0.1:8000' : location.origin;
+  let branch = '';
+  let isOpdRunning = false;
+  let callingNext = false;
+  let loadVersion = 0;
+
+  async function request(path, options) {
+    const res = await fetch(API + path, options);
+    if (!res.ok) throw new Error(`Server returned ${res.status}. Please check the connection and try again.`);
+    return res.json();
+  }
+
+  function playSound(type = 'normal') {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    if (type === 'opd_end') {
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime); 
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); 
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.35);
+    } else {
+      osc.frequency.setValueAtTime(440, ctx.currentTime); 
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.15);
+    }
+  }
+
+  async function load() {
+    if (!branch) return;
+    const version = ++loadVersion;
+    const debugBox = document.getElementById('debug-info');
+    try {
+      const q = await request('/api/display/queue?branch=' + encodeURIComponent(branch));
+      if (version !== loadVersion) return;
+      
+      isOpdRunning = q.is_opd_active;
+      updateOpdButtonUI();
+
+      const currentEl = document.getElementById('current');
+      if (q.now_serving) {
+        currentEl.innerHTML = `Now serving: <strong style="color: #166534; font-size: 1.4rem;">#${q.now_serving.token_id} - ${q.now_serving.patient_name}</strong><small style="display:block; font-size:0.95rem; color:#475569; margin-top:8px;">📞 ${q.now_serving.phone || 'N/A'} | Type: ${q.now_serving.type}</small>`;
+      } else {
+        currentEl.innerHTML = 'No patient currently in consultation';
+      }
+
+      const listEl = document.getElementById('list');
+      if (q.waiting_queue && q.waiting_queue.length > 0) {
+        listEl.innerHTML = q.waiting_queue.map(p => `
+          <tr>
+            <td><strong>#${p.token_id}</strong></td>
+            <td>${p.patient_name}</td>
+            <td><span style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: ${p.type === 'ONLINE' ? '#e0f2fe; color: #0369a1;' : '#fef3c7; color: #92400e;'};">${p.type}</span></td>
+            <td><span style="color: #0d9488; font-weight: 600;">${p.status}</span></td>
+          </tr>
+        `).join('');
+      } else {
+        listEl.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #666; padding: 25px;">Queue is currently empty</td></tr>';
+      }
+
+      debugBox.textContent = `Queue updated successfully at ${new Date().toLocaleTimeString()}`;
+      const s = await request('/api/dashboard/summary?branch=' + encodeURIComponent(branch));
+      if (version !== loadVersion) return;
+      document.getElementById('count').textContent = s.completed_patients;
+      document.getElementById('revenue').textContent = 'Rs. ' + s.total_earnings.toLocaleString();
+    } catch (err) {
+      if (version !== loadVersion) return;
+      debugBox.textContent = `Unable to refresh dashboard: ${err.message} Displayed data may be out of date.`;
+      console.error('Failed to load doctor dashboard:', err);
+    }
+  }
+
+  function updateOpdButtonUI() {
+    const btn = document.getElementById('opd-toggle-btn');
+    const alertDiv = document.getElementById('opd-alert-container');
+    if (isOpdRunning) {
+      btn.textContent = 'End Special OPD';
+      btn.className = 'opd-btn active-opd';
+      alertDiv.innerHTML = `<div class="opd-active-banner">🚨 SPECIAL OPD IS CURRENTLY GOING ON — Walk-ins are paused for receptionists!</div>`;
+    } else {
+      btn.textContent = 'Start Special OPD';
+      btn.className = 'opd-btn';
+      alertDiv.innerHTML = '';
+    }
+  }
+
+  async function toggleOPD() {
+    const newState = !isOpdRunning;
+    try {
+      const res = await fetch(`${API}/api/doctor/opd-toggle?branch=${encodeURIComponent(branch)}&active=${newState}`, { method: 'POST' });
+      if (res.ok) {
+        if (!newState) {
+          playSound('opd_end'); 
+        }
+        load();
+      }
+    } catch (err) {
+      console.error('Error toggling OPD:', err);
+    }
+  }
+
+  async function nextPatient() {
+    if (!branch || callingNext) return;
+    callingNext = true;
+    const btn = document.getElementById('next-patient-btn');
+    const message = document.getElementById('action-message');
+    btn.disabled = true;
+    message.textContent = 'Calling next patient…';
+    try {
+      const result = await request(`/api/queue/call-next?branch=${encodeURIComponent(branch)}`, { method: 'POST' });
+      message.textContent = result.status === 'empty' ? 'No patients remaining in the queue.' : `Called token #${result.token_id}.`;
+      await load();
+      try { if (result.status !== 'empty') playSound('normal'); } catch (err) { console.warn('Sound unavailable:', err); }
+    } catch (err) {
+      message.textContent = `Could not confirm the next patient: ${err.message} Check the current patient before retrying.`;
+      await load();
+      console.error('Error calling next patient:', err);
+    } finally {
+      callingNext = false;
+      btn.disabled = false;
+    }
+  }
+
+  async function init() {
+    try {
+      const d = await request('/api/branches');
+      branch = d.default_branch;
+      const branchEl = document.getElementById('branch');
+      branchEl.innerHTML = d.branches.map(x => `<option value="${x}">${x}</option>`).join('');
+      branchEl.value = branch;
+      document.getElementById('next-patient-btn').disabled = false;
+      load();
+    } catch (err) {
+      document.getElementById('debug-info').textContent = `Unable to connect to the clinic server: ${err.message} Reload this page when the server is available.`;
+      console.error('Init error:', err);
+    }
+  }
+
+  document.querySelector('#branch').onchange = e => {
+    branch = e.target.value;
+    load();
+  };
+
+  init();
+  setInterval(load, 5000);
+</script>
+</body>
+</html>
